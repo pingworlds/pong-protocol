@@ -6,7 +6,7 @@ pong protocol 是一个支持在单一网络连接上多路并发的代理协议
 ## 背景
 
 当前流行的代理协议基本上都源出socks5，基本特征是一个网络连接承载一个代理请求，
-这种模式此存在着无法克服的“连接阻塞”缺陷，具体表现为：
+这种模式存在着无法克服的“连接阻塞”缺陷，具体表现为：
  
   - 浪费连接数，浏览一个新闻/图片网站，可能需要一次性消耗50条以上的网络连接
   - 浪费带宽，连接数限制严重制约了本地和代理服务端的网络带宽利用空间
@@ -63,7 +63,10 @@ header 固定7个字节，len(2字节) + stream id(4字节) + frame type (1 字�
 
 
 - len  16位整数，2个字节，大端序，表示整个frame数据包总长度，包括长度字段本身
-- stream id  32位整数，4个字节，大端序，标识流，local端发起的 stream 的 id 为奇数，
+- stream id  32位整数，4个字节，大端序，标识流.
+  
+  local端发起的 stream 的 id 为奇数.
+
   remote端发起的 stream 的 id 位偶数，虽然可能永远不会发起。id从1开始是个好习惯。
 - frame type   1 个字节，区分不同类型的数据包
 
@@ -111,7 +114,8 @@ socks5 udp assocaiate   应遵循socks5标准
 
 #### 0x05 udp relay   
 
-udp relay 透明转发udp 数据，payload为一个socks5 地址，等价于一个connect, 只是标识为udp以通知remote按udp方式处理
+udp relay 透明转发udp 数据，payload为一个socks5 地址，等价于一个connect, 只是标识为udp以通知remote按udp方式处理.
+
 与udp assocaiate的区别是，它不会建立udp通道，也不关心remote怎么处理，只是将udp请求和数据全权委托给remote
 
 
@@ -133,11 +137,12 @@ udp relay 透明转发udp 数据，payload为一个socks5 地址，等价于一�
 #### 0x09 rst   
 
 通知对方peer 流异常终止， 忽略后续数据包，立即关闭它。
+
 rst 可以不包含错误码,没有payload，也可以在payload中附加错误码和错误描述，第一个字节为错误码，后续字节是描述。
 
 错误码可以帮助对方peer分析错误，沿用并扩展了socks5定义的错误，已定义的错误码列表：
-    //socks5 error code
 
+    //socks5 error code
     ERR                 byte = 1     "proxy server error",
     ERR_RULE            byte = 2     "proxy server rule refuse",
     ERR_NET             byte = 3     "network unreachable"
@@ -164,7 +169,9 @@ rst 可以不包含错误码,没有payload，也可以在payload中附加错误�
 
 ## 交互
 
-pong 网络连接的交互过程如下图,数字表示stream id
+pong 网络连接的交互过程如下图
+
+数字表示stream id
 
     local                                remote 
     |     --- connection header   --->    | 
@@ -187,9 +194,11 @@ pong 网络连接的交互过程如下图,数字表示stream id
 ### 建立连接通道
 
 
-打开连接后，local 首先发送一个用于确定身份的连接头部，remote 收到头部后验证合法性，合法则维持连接，等待后续数据包，不合法则直接关闭连接。
+local 打开remote连接后，首先发送一个用于确定身份的连接头部;
 
-连接头部17个字节，1字节的版本号，16个字节合法的uuid形式的client id， 
+remote 收到头部后验证合法性，合法则维持连接，等待后续数据包，不合法则直接关闭连接。
+
+连接头部17个字节，1字节的版本号，默认为0，16个字节合法的uuid形式的client id， 
 
     --------------------------+ 
     |   ver    | client id    |
@@ -202,13 +211,16 @@ pong 网络连接的交互过程如下图,数字表示stream id
 发送 connect,bind,associate,relay之一来创建stream
 
 - local收到本地软件src(browser,vpn...)的代理请求后，将请求dst地址封装成connect frame发送给remote，
-   无需等待remote响应，remote可能根本不会响应，继续发送后续data frame；
+   
+  无需等待remote响应，remote可能根本不会响应，继续发送后续data frame；
 - remote 收到 connect frame后，读取payload中的socks5地址，打开目标服务dst的网络连接，建立转发通道，
-   如果打开失败，向local发送一个rst frame 终止流，如果成功，顺次取出local发送来的后续data frame中 payload 发送给dst，
-   并将dst的响应数据封装成data frame 回送给local端, 
+  如果打开失败，向local发送一个rst frame 终止流.
+   
+  如果成功，顺次取出local发送来的后续data frame中 payload 发送给dst，
+  并将dst的响应数据封装成data frame 回送给local端, 
 
 
-如此这般，src <--> local <---> remote <---> dst 代理通道建立。
+如此这般，src <--> local <---> remote <---> dst 之间的网络通道建立。
 
 
 ##  传输协议
@@ -225,15 +237,14 @@ pong 本身是明文，不支持加密，加密不应该是代理协议的功能
 
 
    - pong-go  
-     golang 实现，[https://github.com/pingworlds/pong] 
+     golang 实现，<https://github.com/pingworlds/pong>
 
 
  ## pong 客户端
 
    - ping  
-     支持Android，[https://github.com/pingworlds/ping] 
+    支持Android，<https://github.com/pingworlds/ping>
 
- 
  
  
 
