@@ -65,9 +65,9 @@ header 固定7个字节，len(2字节) + stream id(4字节) + frame type (1 字�
 - len  16位整数，2个字节，大端序，表示整个frame数据包总长度，包括长度字段本身
 - stream id  32位整数，4个字节，大端序，标识流.
   
-  local端发起的 stream 的 id 为奇数.
+  local端发起的 stream 的 id 为奇数, id 从1开始是个好习惯。
 
-  remote端发起的 stream 的 id 位偶数，虽然可能永远不会发起。id从1开始是个好习惯。
+  remote端发起的 stream 的 id 位偶数，虽然可能永远不会发起。
 - frame type   1 个字节，区分不同类型的数据包
 
 
@@ -76,7 +76,7 @@ header 固定7个字节，len(2字节) + stream id(4字节) + frame type (1 字�
     0x00   data        //data 
     0x01   connnect    //socks5 connect 
     0x02   bind        //socks5 bind 
-    0x03   assocaiate  //socks5 udp assocaiate 
+    0x03   associate  //socks5 udp associate 
     0x05   relay       //udp relay 
     0x06   set         //settings  
     0x07   finish      //close send channel,half close
@@ -108,15 +108,15 @@ payload 负载是需要转发的实际有效数据
 socks5 bind  应遵循socks5标准
 
 
-#### 0x03 udp assocaiate  （未定义）
+#### 0x03 udp associate  （未定义）
 
-socks5 udp assocaiate   应遵循socks5标准
+socks5 udp associate   应遵循socks5标准
 
 #### 0x05 udp relay   
 
-udp relay 透明转发udp 数据，payload为一个socks5 地址，等价于一个connect, 只是标识为udp以通知remote按udp方式处理.
+udp relay 透明转发udp 数据，payload为一个socks5 地址，等价于connect, 只是标识为udp以通知remote按udp方式处理.
 
-与udp assocaiate的区别是，它不会建立udp通道，也不关心remote怎么处理，只是将udp请求和数据全权委托给remote
+与udp associate的区别是，它不会建立udp通道，也不关心remote怎么处理，只是将udp请求和数据全权委托给remote
 
 
 #### 0x06 set   
