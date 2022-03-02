@@ -30,7 +30,7 @@ The pong protocol uses the http2 model, which can host tens of hundreds of concu
   - High concurrency, usually, 1 network connection supports all proxy requests
   - 0 open time, after receiving a proxy request, it is immediately forwarded out using the established network connection channel, no open time is needed
   - High throughput, can maximize the traffic forwarding horsepower of the proxy service and support more clients
-  - Transport protocol independent, support mainstream Internet standard protocols
+  - Transport protocol independent 
   - Explicit, data encryption relies on standard transmission protocols, reducing the complexity of protocol implementation
   - Open, free for anyone to use
   - Extensible, easy to extend private features, such as enhanced user authentication
@@ -50,9 +50,9 @@ A stream consists of a number of frame packets.
 A frame consists of a mandatory header and an optional paylaod, with the following structure.
 
     +---------+-------------+------------+-------------++
-    | len | stream id | frame type | payload |
-    | 2 byte | 4 byte | 1 byte | 0.... .n byte |           
-    + ---------+-------------+------------+--------------+
+    |   len   |  stream id  | frame type |   payload    |
+    | 2 byte  |    4  byte  |   1 byte   |  0...n byte  |           
+    +---------+-------------+------------+--------------+
 
 payload is a binary data of length [0,65500], which may be the forwarding data of a data frame, or it may be additional information of a command frame
 
@@ -64,7 +64,7 @@ The frame is ordered, but it does not contain a sequential number itself; the or
 header fixed 7 bytes, len (2 bytes) + stream id (4 bytes) + frame type (1 byte)
 
 
-- len 16-bit integer, 2 bytes, large end order, indicating the total length of the entire frame packet, including the length field itself
+- len 16-bit integer, 2 bytes, big-endian, indicating the total length of the entire frame packet, including the length field itself
 - stream id 32-bit integer, 4 bytes, big-endian, identifies the stream.
   
   The id of the stream initiated on the local side is odd, and it is a good habit to start with 1.
@@ -79,7 +79,7 @@ The currently defined frame type :
     0x00   data        //data 
     0x01   connnect    //socks5 connect 
     0x02   bind        //socks5 bind 
-    0x03   associate  //socks5 udp associate 
+    0x03   associate   //socks5 udp associate 
     0x05   relay       //udp relay 
     0x06   set         //settings  
     0x07   finish      //close send channel,half close
@@ -98,11 +98,11 @@ payload is the actual valid data that needs to be forwarded
 
 0x01 means socks5 connect request, payload is a standard socks5 address
 
-    +----+-----+-------+------+----+ 
-    | ATYP | DST.ADDR | DST.PORT |
-    +----+-----+-------+------+----+ 
-    | 1 | Variable | 2 |
-    +----+-----+-------+------+----+ 
+    +----+-----+------+-----------+ 
+    | ATYP | DST.ADDR | DST.PORT  |
+    +----+-----+-------+------+---+ 
+    |   1  | Variable |    2      |
+    +------+----------+-----------+
 
 
 #### 0x02 bind (undefined)
@@ -176,22 +176,24 @@ The interaction process of pong network connection is as follows
 
 The number indicates the stream id
 
-    local remote 
-    | --- connection header ---> | 
-    |-- method connect 1 ---> | create stream 1
-    | --- method connect 3 ---> | create stream 3
-    | --- method connect 5 ---> | create stream 5
-    | --- data 3 ---> | send stream 3 data
-    | --- data 1 ---> | send stream 1 data
-    | --- data 5 ---> | send stream 5 data
-    | --- data 1 ---> | send stream 1 data
-    | --- finish 1 ---> | close stream 1 send channel
-    | --- finish 3 ---> | close stream 3 send channel
-    | <-- data 5 ---- | respond to stream 5 data 
-    | <-- data 3 ---- | response stream 3 data
-    | --- rst 3 ---> | cancel stream 3 
-    | <-- finish 5 ---- | close stream 5 response channel
-    | <-- ...             ---- | ....
+
+    local                                remote 
+    |     --- connection header   --->    | 
+    |     ---   method connect 1  --->    | create stream 1
+    |     ---   method connect 3  --->    | create stream 3
+    |     ---   method connect 5  --->    | create stream 5
+    |     ---     data  3         --->    | send stream 3 data
+    |     ---     data  1         --->    | send stream 1 data
+    |     ---     data  5         --->    | send stream 5 data
+    |     ---     data  1         --->    | send stream 1 data
+    |     ---     finish  1       --->    | close stream 1 send channel
+    |     ---     finish  3       --->    | close stream 3 send channel
+    |     <---    data  5         ----    | respond to stream 5 data 
+    |     <---    data  3         ----    | response stream 3 data
+    |     ---     rst  3          --->    | cancel stream 3 
+    |     <---    finish 5        ----    | close stream 5 response channel
+    |     <---    ...             ----    | ....
+
 
 
 ### Establishing a connection channel
@@ -203,10 +205,11 @@ remote receives the header and verifies the legitimacy, if it is legal, the conn
 
 Connection header is 17 bytes, 1 byte version number, default is 0, 16 bytes client id in the form of legal uuid. 
 
+
     --------------------------+ 
-    | ver | client id |
-    + ----+-----+-------+------+ 
-    | 1 byte | 16 byte |
+    |   ver    | client id    |
+    +----+-----+-------+------+ 
+    |  1 byte  |   16 byte    |
     --------------------------+ 
 
 ### Create stream
