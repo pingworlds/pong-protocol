@@ -1,5 +1,8 @@
 # pong-protocol
 
+- [中文](README.md)
+- [English](pong_en.md)
+
 pong protocol 是一个支持在单一网络连接上多路并发的代理协议，分为local 和remote 端两部分运行。
 
 
